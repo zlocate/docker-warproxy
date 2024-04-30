@@ -31,18 +31,18 @@ RUN \
     echo "**** install wgcf ****" && \
     curl -fsSL https://git.io/wgcf.sh | bash
 
-## INSTALL wireproxy
+## INSTALL wireproxy (zlocate fork)
 FROM golang:1.22-alpine${ALPINE_VER} AS wproxy
 RUN \
     echo "**** build wireproxy ****" && \
-    go install github.com/pufferffish/wireproxy/cmd/wireproxy@latest
+    go install github.com/zlocate/wireproxy/cmd/wireproxy@latest
 
-## INSTALL python-proxy
+## INSTALL python-proxy (zlocate fork)
 FROM base AS pproxy
 RUN \
     apk add --no-cache git && \
     pip install --root /bar \
-        "pproxy[accelerated] @ git+https://github.com/by275/python-proxy"
+        "pproxy[accelerated] @ git+https://github.com/zlocate/python-proxy"
 
 
 FROM base AS collector
@@ -51,7 +51,6 @@ COPY --from=wgcf /usr/local/bin/wgcf /bar/usr/local/bin/wgcf
 COPY --from=wproxy /go/bin/wireproxy /bar/usr/local/bin/wireproxy
 COPY --from=pproxy /bar/ /bar/
 COPY root/ /bar/
-
 RUN echo "**** permissions ****" && \
     chmod a+x \
         /bar/usr/local/bin/* \
@@ -62,9 +61,6 @@ RUN echo "**** permissions ****" && \
 ## RELEASE
 
 FROM base
-LABEL maintainer="105PM"
-LABEL org.opencontainers.image.source https://github.com/105PM/docker-warproxy
-
 COPY --from=collector /bar/ /
 
 ENV \
